@@ -1,5 +1,8 @@
 - command: tftp -gr blup.sh 172.16.201.70
+
 - command: echo tftphost=172.16.201.70 > /tmp/serverparams.conf
-- comamnd: chmod 0777 blup.sh
+
+- command: chmod 0777 blup.sh
+
 - command: ./blup.sh
 
