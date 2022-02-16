@@ -1,3 +1,4 @@
+import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pprint import pprint
 from datetime import datetime
@@ -12,9 +13,8 @@ from netmiko.ssh_exception import NetMikoAuthenticationException
 from netmiko.ssh_exception import NetMikoTimeoutException
 
 # Prompt the user to input a network address
-def aipFinder(network, subnet):
+def aipFinder(net_addr):
 
-    net_addr = network + subnet
 
     # Create the network
     ip_net = ipaddress.ip_network(net_addr)
@@ -44,7 +44,7 @@ def aipFinder(network, subnet):
             print(str(all_hosts[i]), "is Offline")
         else:
             print(str(all_hosts[i]), "is Online")
-            dict_file = [{"device_type": device_type, "host": str(all_hosts[i]), "username": "root", "global_delay_factor": 4, "password": password}]
+            dict_file = [{"device_type": device_type, "host": str(all_hosts[i]), "username": "root", "global_delay_factor": 10, "password": password}]
             documents = yaml.dump(dict_file, file)
 
     return ''
@@ -53,7 +53,7 @@ def aipFinder(network, subnet):
 
 netmiko_exceptions = (NetMikoTimeoutException,
                      NetMikoAuthenticationException)
-logging.getLogger("paramiko").setLevel(logging.WARNING)
+logging.getLogger("paramiko").setLevel(logging.DEBUG)
 
 logging.basicConfig(
     filename="update.log",
@@ -70,13 +70,19 @@ received_msg = '<=== {} Received: {}'
 def send_show(device_dict, command):
 
     ip = device_dict['host']
-
+    update_klaar = open("geupdate.txt", 'w')
     logging.info(start_msg.format(datetime.now().time(), ip, command))
+    tijd = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     if ip == '192.168.100.1': time.sleep(5)
     with ConnectHandler(**device_dict) as ssh:
         ssh.enable()
         result = ssh.send_config_set(command)
         logging.debug(received_msg.format(datetime.now().time(), ip, command))
+        if "Update succesful" in result:
+            print(ip + " update sucessful")
+            update_klaar.write(tijd + " "+ ip + " Gelukt")
+        else:
+            update_klaar.write(tijd +" "+ ip + ' update gefaald ')
     return {ip: result[0:10]}
 
 
@@ -96,23 +102,18 @@ def send_command_to_devices(devices, command):
     return data
 
 tftp = '172.16.201.70'
-
+commands = ['tftp -gr blup.sh 172.16.201.70', 'echo tftphost=172.16.201.70 > /tmp/serverparams.conf', 'chmod 0777 blup.sh', './blup.sh']
 
 if __name__ == '__main__':
-    aipFinder('172.16.201.64', '/26')
-    with open('devices.yaml') as f:
-        devices = yaml.safe_load(f)
-
-
-    commands = ['tftp -gr blup.sh 172.16.201.70', 'echo tftphost=172.16.201.70 > /tmp/serverparams.conf', 'chmod 0777 blup.sh', './blup.sh']
-
-    #pprint(send_command_to_devices(devices, 'ip addr'))
-    #pprint(send_command_to_devices(devices, 'tftp -gr blup.sh 172.16.201.70'))
-    #pprint(send_command_to_devices(devices, 'echo tftphost=172.16.201.70 > /tmp/serverparams.conf'))
-    #pprint(send_command_to_devices(devices, 'chmod 0777 blup.sh'))
-    #pprint(send_command_to_devices(devices, './blup.sh'))
-    pprint(send_command_to_devices(devices, commands))
-
-
-
-
+    if os.path.exists('devices.yaml'):
+        answer = input("Lijst bestaat al, opnieuw scannen?")
+        if answer == "n":
+            with open('devices.yaml') as f:
+                devices = yaml.safe_load(f)
+                pprint(send_command_to_devices(devices, commands))
+        elif answer == "y":
+            net_addr = input("Voer netwerk ip in met subnet(bijv.192.168.1.0/24): ")
+            aipFinder(net_addr)
+            with open('devices.yaml') as f:
+                devices = yaml.safe_load(f)
+                pprint(send_command_to_devices(devices, commands))
