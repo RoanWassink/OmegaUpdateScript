@@ -1,25 +1,6 @@
 - device_type: linux
-  global_delay_factor: 4
-  host: 172.16.201.70
+  global_delay_factor: 10
+  host: 172.16.201.54
   password: ''
   username: root
-- device_type: linux
-  global_delay_factor: 4
-  host: 172.16.201.71
-  password: ''
-  username: root
-- device_type: linux
-  global_delay_factor: 4
-  host: 172.16.201.72
-  password: ''
-  username: root
-- device_type: linux
-  global_delay_factor: 4
-  host: 172.16.201.75
-  password: ''
-  username: root
-- device_type: linux
-  global_delay_factor: 4
-  host: 172.16.201.89
-  password: ''
-  username: root
+  timeout: 5 * 60
