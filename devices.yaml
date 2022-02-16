@@ -1,16 +1,6 @@
-
-
 - device_type: linux
-  host: 172.16.201.51
-  username: root
+  global_delay_factor: 1
+  host: 172.16.201.54
   password: ''
-  global_delay_factor: 4
-
-- device_type: linux
-  host: 172.16.201.75
   username: root
-  password: ''
-  global_delay_factor: 4
-
-
-
+  timeout: 360
